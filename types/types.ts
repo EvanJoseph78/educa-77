@@ -28,3 +28,13 @@ export interface CategoryFilterProps {
   selectedDifficulty: string;
   onDifficultyChange: (difficulty: string) => void;
 }
+
+export interface QuestionType {
+  id: string;
+  question: string;
+  category: string;
+  difficulty: number;
+  options?: string[];
+  correctAnswer?: string;
+  answer: string;
+}
