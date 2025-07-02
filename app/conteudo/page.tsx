@@ -5,8 +5,9 @@ import MarkdownRenderer from '@/components/MarkdownRenderer';
 import Navbar from '@/components/Navbar';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function ContentPage() {
+function ContentPageContent() {
     const searchParams = useSearchParams();
     const filePath = searchParams.get('file');
     const contentId = searchParams.get('id');
@@ -33,5 +34,23 @@ export default function ContentPage() {
 
             <Navbar />
         </div>
+    );
+}
+
+export default function ContentPage() {
+    return (
+        <Suspense fallback={
+            <div className="container mx-auto px-4 py-6 pb-20">
+                <div className="flex items-center text-blue-600 mb-6">
+                    <ArrowLeft className="w-5 h-5 mr-2" />
+                    Voltar para conteúdos
+                </div>
+                <div className="text-center py-12">
+                    <p className="text-gray-500">Carregando conteúdo...</p>
+                </div>
+            </div>
+        }>
+            <ContentPageContent />
+        </Suspense>
     );
 }
