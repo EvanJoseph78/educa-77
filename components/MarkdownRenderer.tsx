@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import type { SyntaxHighlighterProps } from 'react-syntax-highlighter';
 import { atomOneLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import { useEffect, useState } from 'react';
 
@@ -13,7 +14,10 @@ interface MarkdownRendererProps {
   className?: string;
 }
 
-const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
+  filePath,
+  className = ''
+}) => {
   const [markdown, setMarkdown] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +26,7 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
     const fetchMarkdown = async () => {
       setIsLoading(true);
       setError(null);
-      
+
       try {
         const response = await fetch(filePath);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -83,7 +87,7 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
               {children}
             </h3>
           ),
-          
+
           // Text elements
           p: ({ children, ...props }) => (
             <p className="my-4 leading-relaxed text-gray-700" {...props}>
@@ -100,11 +104,11 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
               {children}
             </em>
           ),
-          
+
           // Links
           a: ({ children, href, ...props }) => (
-            <a 
-              href={href} 
+            <a
+              href={href}
               className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               target="_blank"
               rel="noopener noreferrer"
@@ -113,7 +117,7 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
               {children}
             </a>
           ),
-          
+
           // Lists
           ul: ({ children, ...props }) => (
             <ul className="list-disc pl-6 my-3 space-y-1 text-gray-700" {...props}>
@@ -130,7 +134,7 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
               {children}
             </li>
           ),
-          
+
           // Tables
           table: ({ children, ...props }) => (
             <div className="overflow-x-auto my-6 rounded-lg border border-gray-200 shadow-sm">
@@ -164,9 +168,19 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
               {children}
             </td>
           ),
-          
+
           // Code blocks
-          code({ inline, className, children, ...props }) {
+          code(
+            {
+              inline,
+              className,
+              children,
+              ...props
+            }: React.PropsWithChildren<{
+              inline?: boolean;
+              className?: string;
+            }> & React.HTMLAttributes<HTMLElement>
+          ) {
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
               <div className="my-4 rounded-lg overflow-hidden border border-gray-200">
@@ -182,40 +196,40 @@ const MarkdownRenderer = ({ filePath, className = '' }: MarkdownRendererProps) =
                     fontSize: '0.9rem',
                     backgroundColor: '#f8fafc'
                   }}
-                  {...props}
+                  {...props as SyntaxHighlighterProps}
                 >
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
               </div>
             ) : (
-              <code 
-                className={`font-mono bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm ${className || ''}`} 
+              <code
+                className={`font-mono bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm ${className || ''}`}
                 {...props}
               >
                 {children}
               </code>
             );
           },
-          
+
           // Blockquotes
           blockquote: ({ children, ...props }) => (
             <blockquote className="border-l-4 border-blue-300 pl-4 italic text-gray-600 my-4 py-2 bg-blue-50 rounded-r" {...props}>
               {children}
             </blockquote>
           ),
-          
+
           // Images
           img: ({ src, alt, ...props }) => (
             <div className="my-6 flex justify-center">
-              <img 
-                src={src} 
-                alt={alt || ''} 
-                className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200" 
+              <img
+                src={src}
+                alt={alt || ''}
+                className="max-w-full h-auto rounded-lg shadow-sm border border-gray-200"
                 {...props}
               />
             </div>
           ),
-          
+
           // Horizontal rule
           hr: ({ ...props }) => (
             <hr className="my-8 border-t border-gray-200" {...props} />
