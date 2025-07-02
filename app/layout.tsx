@@ -17,10 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} bg-gray-50`}>
-        {children}
+      <body className={`${inter.className} bg-gray-50 pt-16`}> {/* 16 = altura da navbar */}
         <Navbar />
-
+        {children}
       </body>
     </html>
   );

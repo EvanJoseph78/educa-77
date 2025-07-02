@@ -1,135 +1,177 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Flashcard from '@/components/Flashcard';
-import Controls from '@/components/Controls';
-import Stats from '@/components/Stats';
-import CategoryFilter from '@/components/CategoryFilter';
-import { FlashcardType } from '@/types/types';
-import { flashcardsData } from '@/lib/data';
+import { BookText, Scale, Gavel, LibraryBig, FileText, Video } from 'lucide-react';
+import Navbar from '@/components/Navbar';
+import Link from 'next/link';
 
-export default function FlashcardPlatform() {
-  const [flashcards, setFlashcards] = useState<FlashcardType[]>(flashcardsData);
-  const [filteredCards, setFilteredCards] = useState<FlashcardType[]>(flashcardsData);
-  const [activeCardId, setActiveCardId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
-  const [studiedCards, setStudiedCards] = useState<Set<string>>(new Set());
+export default function HomePage() {
+  const contentCategories = [
+    {
+      title: "Teoria Geral do Direito",
+      icon: <BookText className="w-8 h-8 text-blue-600" />,
+      items: [
+        {
+          id: "intro-direito",
+          title: "Introdução ao Direito",
+          type: "texto",
+          duration: "15 min",
+          progress: 80,
+          filePath: "/conteudos/teoria-geral/introducao-ao-direito.md"
+        },
+        {
+          id: "fontes-direito",
+          title: "Fontes do Direito",
+          type: "video",
+          duration: "22 min",
+          progress: 45,
+          filePath: "/conteudos/teoria-geral/fontes-do-direito.md"
+        },
+        {
+          id: "ramos-direito",
+          title: "Ramos do Direito",
+          type: "texto",
+          duration: "10 min",
+          progress: 0,
+          filePath: "/conteudos/teoria-geral/ramos-do-direito.md"
+        }
+      ]
+    },
+    {
+      title: "Direito Constitucional",
+      icon: <Scale className="w-8 h-8 text-blue-600" />,
+      items: [
+        {
+          id: "principios-fundamentais",
+          title: "Princípios Fundamentais",
+          type: "texto",
+          duration: "18 min",
+          progress: 100,
+          filePath: "/conteudos/constitucional/principios-fundamentais.md"
+        },
+        {
+          id: "direitos-garantias",
+          title: "Direitos e Garantias",
+          type: "video",
+          duration: "35 min",
+          progress: 60,
+          filePath: "/conteudos/constitucional/direitos-e-garantias.md"
+        }
+      ]
+    },
+    // ... outras categorias com a mesma estrutura
+  ];
 
-  // Carrega dados salvos do localStorage
-  useEffect(() => {
-    const savedStudied = localStorage.getItem('studiedFlashcards');
-    if (savedStudied) {
-      setStudiedCards(new Set(JSON.parse(savedStudied)));
-    }
-  }, []);
-
-  // Filtra os flashcards
-  useEffect(() => {
-    let result = [...flashcards];
-
-    if (selectedCategory !== 'all') {
-      result = result.filter(card => card.category === selectedCategory);
-    }
-
-    if (selectedDifficulty !== 'all') {
-      result = result.filter(card => card.difficulty.toString() === selectedDifficulty);
-    }
-
-    setFilteredCards(result);
-    setActiveCardId(null);
-  }, [selectedCategory, selectedDifficulty, flashcards]);
-
-  // Manipuladores de eventos
-  const handleCardClick = (id: string) => {
-    setActiveCardId(activeCardId === id ? null : id);
-  };
-
-  const handleStudyToggle = (id: string) => {
-    const newStudied = new Set(studiedCards);
-    if (newStudied.has(id)) {
-      newStudied.delete(id);
-    } else {
-      newStudied.add(id);
-    }
-    setStudiedCards(newStudied);
-    localStorage.setItem('studiedFlashcards', JSON.stringify(Array.from(newStudied)));
-  };
-
-  const handleShowAll = () => {
-    setFilteredCards(prev => [...prev]);
-    if (filteredCards.length > 0) {
-      setActiveCardId(filteredCards[0].id);
-    }
-  };
-
-  const handleHideAll = () => {
-    setActiveCardId(null);
-  };
-
-  const handleReset = () => {
-    setStudiedCards(new Set());
-    localStorage.removeItem('studiedFlashcards');
-  };
-
-  const handleShuffle = () => {
-    setFilteredCards(prev => [...prev.sort(() => Math.random() - 0.5)]);
-    setActiveCardId(null);
-  };
-
-  // Extrai categorias únicas
-  const categories = ['all', ...new Set(flashcards.map(card => card.category))];
+  const recentItems = [
+    {
+      id: "principios-fundamentais",
+      title: "Princípios Fundamentais",
+      category: "Direito Constitucional",
+      lastAccessed: "2 horas atrás",
+      progress: 100,
+      filePath: "/conteudos/constitucional/principios-fundamentais.md"
+    },
+    // ... outros itens recentes
+  ];
 
   return (
-    <main className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
-      <header className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Plataforma Educacional de Direito</h1>
-        <p className="text-gray-600">Estude os principais conceitos jurídicos através de flashcards interativos</p>
+    <div className="container mx-auto px-4 py-6 pb-20">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Conteúdos Jurídicos</h1>
+        <p className="text-gray-600">Aprenda os principais conceitos do Direito</p>
       </header>
 
-      <div className="mb-8">
-        <div className="flex flex-wrap justify-between gap-4 mb-6">
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            difficulties={['all', '1', '2', '3']}
-            selectedDifficulty={selectedDifficulty}
-            onDifficultyChange={setSelectedDifficulty}
-          />
-          <Controls
-            onShowAll={handleShowAll}
-            onHideAll={handleHideAll}
-            onReset={handleReset}
-            onShuffle={handleShuffle}
-          />
+      <section className="mb-10">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FileText className="text-blue-500" />
+          Continuar de onde parou
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {recentItems.map((item) => (
+            <Link
+              key={item.id}
+              href={`/conteudo?id=${item.id}&file=${encodeURIComponent(item.filePath)}`}
+              className="bg-white p-5 rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow block"
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <h3 className="font-semibold text-gray-800">{item.title}</h3>
+                  <span className="text-xs text-gray-500">{item.category}</span>
+                </div>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  {item.progress}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div
+                  className="h-2 bg-blue-500 rounded-full"
+                  style={{ width: `${item.progress}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>{item.lastAccessed}</span>
+                <span className="text-blue-600 hover:text-blue-800 font-medium">
+                  {item.progress === 100 ? 'Revisar' : 'Continuar'}
+                </span>
+              </div>
+            </Link>
+          ))}
         </div>
+      </section>
 
-        <Stats
-          totalCards={flashcards.length}
-          studiedCards={studiedCards.size}
-          filteredCards={filteredCards.length}
-        />
-      </div>
+      <section>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Explore por Categoria</h2>
+        <div className="space-y-6">
+          {contentCategories.map((category) => (
+            <div key={category.title} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="p-4 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  {category.icon}
+                </div>
+                <h3 className="font-semibold text-gray-800">{category.title}</h3>
+              </div>
+              <div className="divide-y divide-gray-200">
+                {category.items.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/conteudo?id=${item.id}&file=${encodeURIComponent(item.filePath)}`}
+                    className="p-4 hover:bg-gray-50 transition-colors block"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`p-2 rounded-lg ${item.type === 'video' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                        {item.type === 'video' ? <Video className="w-5 h-5" /> : <FileText className="w-5 h-5" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <h4 className="font-medium text-gray-800">{item.title}</h4>
+                          <span className="text-xs text-gray-500">{item.duration}</span>
+                        </div>
+                        <div className="mt-2">
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="h-2 rounded-full bg-blue-500"
+                              style={{ width: `${item.progress}%` }}
+                            ></div>
+                          </div>
+                          <div className="flex justify-between mt-1">
+                            <span className="text-xs text-gray-500">
+                              {item.progress === 0 ? 'Não iniciado' : `${item.progress}% concluído`}
+                            </span>
+                            <span className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                              {item.progress === 0 ? 'Começar' : item.progress === 100 ? 'Revisar' : 'Continuar'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-      <div className="space-y-4">
-        {filteredCards.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
-            <p className="text-gray-500">Nenhum flashcard encontrado com os filtros selecionados.</p>
-          </div>
-        ) : (
-          filteredCards.map(card => (
-            <Flashcard
-              key={card.id}
-              card={card}
-              isActive={activeCardId === card.id}
-              isStudied={studiedCards.has(card.id)}
-              onClick={() => handleCardClick(card.id)}
-              onStudyToggle={() => handleStudyToggle(card.id)}
-            />
-          ))
-        )}
-      </div>
-    </main>
+      <Navbar />
+    </div>
   );
 }
