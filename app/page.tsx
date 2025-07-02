@@ -1,103 +1,135 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import Flashcard from '@/components/Flashcard';
+import Controls from '@/components/Controls';
+import Stats from '@/components/Stats';
+import CategoryFilter from '@/components/CategoryFilter';
+import { FlashcardType } from '@/types/types';
+import { flashcardsData } from '@/lib/data';
+
+export default function FlashcardPlatform() {
+  const [flashcards, setFlashcards] = useState<FlashcardType[]>(flashcardsData);
+  const [filteredCards, setFilteredCards] = useState<FlashcardType[]>(flashcardsData);
+  const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
+  const [studiedCards, setStudiedCards] = useState<Set<string>>(new Set());
+
+  // Carrega dados salvos do localStorage
+  useEffect(() => {
+    const savedStudied = localStorage.getItem('studiedFlashcards');
+    if (savedStudied) {
+      setStudiedCards(new Set(JSON.parse(savedStudied)));
+    }
+  }, []);
+
+  // Filtra os flashcards
+  useEffect(() => {
+    let result = [...flashcards];
+
+    if (selectedCategory !== 'all') {
+      result = result.filter(card => card.category === selectedCategory);
+    }
+
+    if (selectedDifficulty !== 'all') {
+      result = result.filter(card => card.difficulty.toString() === selectedDifficulty);
+    }
+
+    setFilteredCards(result);
+    setActiveCardId(null);
+  }, [selectedCategory, selectedDifficulty, flashcards]);
+
+  // Manipuladores de eventos
+  const handleCardClick = (id: string) => {
+    setActiveCardId(activeCardId === id ? null : id);
+  };
+
+  const handleStudyToggle = (id: string) => {
+    const newStudied = new Set(studiedCards);
+    if (newStudied.has(id)) {
+      newStudied.delete(id);
+    } else {
+      newStudied.add(id);
+    }
+    setStudiedCards(newStudied);
+    localStorage.setItem('studiedFlashcards', JSON.stringify(Array.from(newStudied)));
+  };
+
+  const handleShowAll = () => {
+    setFilteredCards(prev => [...prev]);
+    if (filteredCards.length > 0) {
+      setActiveCardId(filteredCards[0].id);
+    }
+  };
+
+  const handleHideAll = () => {
+    setActiveCardId(null);
+  };
+
+  const handleReset = () => {
+    setStudiedCards(new Set());
+    localStorage.removeItem('studiedFlashcards');
+  };
+
+  const handleShuffle = () => {
+    setFilteredCards(prev => [...prev.sort(() => Math.random() - 0.5)]);
+    setActiveCardId(null);
+  };
+
+  // Extrai categorias únicas
+  const categories = ['all', ...new Set(flashcards.map(card => card.category))];
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="container mx-auto px-4 py-8 bg-gray-50 min-h-screen">
+      <header className="text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">Plataforma Educacional de Direito</h1>
+        <p className="text-gray-600">Estude os principais conceitos jurídicos através de flashcards interativos</p>
+      </header>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="mb-8">
+        <div className="flex flex-wrap justify-between gap-4 mb-6">
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+            difficulties={['all', '1', '2', '3']}
+            selectedDifficulty={selectedDifficulty}
+            onDifficultyChange={setSelectedDifficulty}
+          />
+          <Controls
+            onShowAll={handleShowAll}
+            onHideAll={handleHideAll}
+            onReset={handleReset}
+            onShuffle={handleShuffle}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        <Stats
+          totalCards={flashcards.length}
+          studiedCards={studiedCards.size}
+          filteredCards={filteredCards.length}
+        />
+      </div>
+
+      <div className="space-y-4">
+        {filteredCards.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-xl shadow-sm border border-gray-200">
+            <p className="text-gray-500">Nenhum flashcard encontrado com os filtros selecionados.</p>
+          </div>
+        ) : (
+          filteredCards.map(card => (
+            <Flashcard
+              key={card.id}
+              card={card}
+              isActive={activeCardId === card.id}
+              isStudied={studiedCards.has(card.id)}
+              onClick={() => handleCardClick(card.id)}
+              onStudyToggle={() => handleStudyToggle(card.id)}
+            />
+          ))
+        )}
+      </div>
+    </main>
   );
 }
